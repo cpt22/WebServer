@@ -155,4 +155,19 @@ public class Configuration {
             return def;
         }
     }
+
+    /**
+     * Fetches an Object at the specified key
+     * @param key - key of the Object value to be fetched
+     * @return - the Object at the key
+     * @throws YAMLConfigurationException - Thrown if the object is not found
+     */
+    public Object getObject(String key) throws YAMLConfigurationException {
+        Object obj = config.get(key);
+        if (obj != null) {
+            return obj;
+        } else {
+            throw new YAMLConfigurationException("Object not found for key '" + key + "'");
+        }
+    }
 }

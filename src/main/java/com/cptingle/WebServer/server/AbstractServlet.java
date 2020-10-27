@@ -8,16 +8,16 @@ import jdk.net.SocketFlow;
 import java.io.IOException;
 
 public abstract class AbstractServlet implements HTTPServlet {
-    protected String uri;
+    protected String[] uris;
     protected HTTPServer server;
 
-    public AbstractServlet(HTTPServer server, String uri) {
+    public AbstractServlet(HTTPServer server, String[] uris) {
         this.server = server;
-        this.uri = uri;
+        this.uris = uris;
     }
 
-    public String getURI() {
-        return uri;
+    public String[] getURIs() {
+        return uris;
     }
 
     public void get(ClientConnection conn, Request req) {

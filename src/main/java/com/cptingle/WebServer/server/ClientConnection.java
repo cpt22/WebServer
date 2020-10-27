@@ -60,6 +60,18 @@ public class ClientConnection implements Runnable {
         return server;
     }
 
+    public String getAddress() {
+        return socket.getInetAddress().getHostAddress();
+    }
+
+    public String getHost() {
+        return socket.getInetAddress().getHostName();
+    }
+
+    public Logger getLogger() {
+        return server.getLogger();
+    }
+
     @Override
     public void run() {
 
@@ -80,13 +92,13 @@ public class ClientConnection implements Runnable {
                     headers.add(inputLine);
                 }
 
-                getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.VERBOSE, "Request received from client");
+                getLogger().verbose("Request received from client", getAddress());
 
                 // Debug headers and cookies
                 if (server.isDebugging()) {
-                    getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.DEBUG, "RECEIVED HEADERS");
+                    getLogger().debug("RECEIVED HEADERS\n", getAddress());
                     for (String header : headers) {
-                        getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.DEBUG, header);
+                        getLogger().debug(header, getAddress());
                     }
                 }
 
@@ -116,10 +128,11 @@ public class ClientConnection implements Runnable {
                     } catch (SocketException e) {
                         e.printStackTrace();
                     } catch (NullPointerException e) {
-                        getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.VERBOSE, "Malformed headers received");
+                        getLogger().verbose("Malformed headers received", getAddress());
                     }
                 }
 
+                // Switch the request method and pass the request to the appropriate function
                 switch (request.getMethod()) {
                     case GET:
                         if (servlet != null) {
@@ -172,148 +185,42 @@ public class ClientConnection implements Runnable {
                         break;
                 }
 
-                /**
-                 *
-                 *
-                 *
-                 *
-                 *
-                 *
-                 *
-                 *
-                 *
-                 */
-                /*getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.VERBOSE, "Request received from client");
-
-                // Debug headers and cookies
-                if (server.isDebugging()) {
-                    getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.DEBUG, "RECEIVED HEADERS");
-                    for (String header : headers) {
-                        getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.DEBUG, header);
-                    }
-
-                    for (Map.Entry<String, String> entry : cookies.entrySet()) {
-                        getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.DEBUG, "cookie: " + entry.getKey() + "=" + entry.getValue());
-                    }
-                }
-
-                // If the config value for persistent connections is set, then set the socket timeout to the value specified in the headers otherwise use com.cptingle.WebServer.server config val.
-                if (server.areConnectionsPersistent() && headerMap.containsKey("keep-alive")) {
-                    try {
-                        String hdr = headerMap.get("keep-alive");
-                        String[] attrSplit = hdr.split(",");
-                        Map<String, String> tempMap = new HashMap<String, String>();
-                        for (String s : attrSplit) {
-                            String[] tmp = s.split("=");
-                            tempMap.put(tmp[0], tmp[1]);
-                        }
-                        socket.setSoTimeout(Integer.parseInt(tempMap.get("timeout")) * 1000);
-                    } catch (SocketException e) {
-                        e.printStackTrace();
-                    } catch (NullPointerException e) {
-                        getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.VERBOSE, "Malformed headers received");
-                    }
-                }
-
-                if (filePath.substring(filePath.length() - 1).equals("/")) {
-                    filePath += config.getString("index-page", "index.html");
-                }
-
-                // This com.cptingle.WebServer.server only handles GET requests for now
-                if (method.equalsIgnoreCase("GET")) {
-
-                    // Loads the file at the specified filePath
-                    File file = new File(WEB_ROOT + filePath);
-                    if (!Files.exists(Paths.get(WEB_ROOT + filePath))) {
-                        getLogger().logRequest(socket.getInetAddress().getHostAddress(), socket.getInetAddress().getHostName(), headers.get(0), String.valueOf(Status.NOT_FOUND.getStatusCode()));
-                        throw new FileNotFoundException();
-                    }
-
-                    // Track visits based on the cookie stored
-                    int visitCount = 1;
-                    if (cookies.containsKey("visits") && Utility.isNumeric(cookies.get("visits"))) {
-                        visitCount = Integer.parseInt(cookies.get("visits")) + 1;
-                        System.out.println(visitCount);
-                    }
-
-                    // Sets up symbols for replacement within HTML files. This is used to insert the number of visits dynamically into the visits.html
-                    Map<String, Object> symbolMap = new HashMap<String, Object>();
-                    switch (filePath) {
-                        case "/cpt15/visits.html":
-                            symbolMap.put("visits", visitCount);
-                            break;
-                        default:
-                            break;
-                    }
-
-                    // Uses the FileParser to parse the html with the symbol map and perform necessary replacements
-                    String fileString = FileParser.parseFile(file, symbolMap);
-
-                    // Specifies additional headers to send (Such as set-cookie headers) along with the standard headers
-                    List<String> additionalHeaders = new ArrayList<String>();
-                    additionalHeaders.add(Utility.buildCookie("visits", String.valueOf(visitCount), "Path: cpt15"));
-
-                    // Sends the HTTP com.cptingle.WebServer.response
-                    getLogger().logRequest(socket.getInetAddress().getHostAddress(), socket.getInetAddress().getHostName(), headers.get(0), String.valueOf(Status.OK.getStatusCode()));
-                    if (!sendResponse(Status.OK, additionalHeaders, fileString)) {
-                        getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.INFO, "Error sending com.cptingle.WebServer.response to client");
-                    }
-                } else {
-                    // Send this com.cptingle.WebServer.response if the client sents a request with an unsupported method
-                    if (!sendResponse(Status.OK, new File(WEB_ROOT, "method-not-supported.html"))) {
-                        getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.INFO, "Error sending com.cptingle.WebServer.response to client");
-                    }
-                }*/
 
                 // If connections are not persistent, close all socket connections.
                 if (!server.areConnectionsPersistent()) {
-                    getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.VERBOSE, "Connection with a client closed (non-persistent)");
+                    getLogger().verbose("Connection with a client closed (non-persistent)", getAddress());
                     in.close();
                     bytesOut.close();
                     out.close();
                     socket.close();
                     break;
                 }
-                /***
-                 *
-                 *
-                 *
-                 *
-                 *
-                 *
-                 *
-                 *
-                 */
             } catch (FileNotFoundException ex) {
                 try {
-                    if(!sendResponse(Status.NOT_FOUND, "<html><head><title>Page not found</title></head><body>404 Page not found</body></html>")){//new File(WEB_ROOT, ResponseCode.FILE_NOT_FOUND.path))) {
-                        getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.INFO, "Error sending com.cptingle.WebServer.response to client");
+                    if(!sendResponse(Status.NOT_FOUND, "<html><head><title>Page not found</title></head><body>404 Page not found</body></html>")){
+                        getLogger().info("Error sending response to client", getAddress());
                     }
                 } catch (IOException ex1) {
-                    getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.SEVERE, "An exception was encountered in generating the 404 error page " + ex1.getMessage());
+                    getLogger().severe("An exception was encountered in generating the error page" + ex1.getMessage(), getAddress());
                     System.err.println("An exception was encountered in generating the error page: " + ex1.getMessage());
                 }
             } catch (SocketTimeoutException ex) {
                 // Catch the SocketTimeoutException and close all of the streams and socket.
-                getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.VERBOSE, "Connection with a client timed out and was closed (persistent)");
+                getLogger().verbose("Connection with a client timed out and was closed (persistent)", getAddress());
                 try {
                     in.close();
                     bytesOut.close();
                     out.close();
                     socket.close();
                 } catch (IOException ex1) {
-                    getLogger().errorLog("", LogLevel.INFO, ex1.getMessage());
+                    getLogger().info(ex1.getMessage(), "");
                 }
                 break;
             } catch (IOException ex) {
-                getLogger().errorLog("", LogLevel.INFO, ex.getMessage());
+                getLogger().info(ex.getMessage(), "");
                 break;
             }
         }
-    }
-
-    public Logger getLogger() {
-        return server.getLogger();
     }
 
     /**
@@ -360,7 +267,7 @@ public class ClientConnection implements Runnable {
         // Builds and sends the header using the helper method in the Utility class
         String headers = Utility.buildHeaders(this, code, extraHeaders, "text/html", fileLength);
 
-        getLogger().errorLog(socket.getInetAddress().getHostAddress(), LogLevel.DEBUG, "SENDING HEADERS\n" + headers);
+        getLogger().debug("SENDING HEADERS\n" + headers, getAddress());
 
         out.print(headers);
         out.flush();

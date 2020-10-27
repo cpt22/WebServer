@@ -102,7 +102,9 @@ public class HTTPServer implements Runnable {
                     Class clazz = cld.loadClass(name);
                     Object obj = clazz.getConstructor(new Class[]{HTTPServer.class}).newInstance(this);
                     AbstractServlet asv = (AbstractServlet) obj;
-                    servletMap.put(asv.getURI(), asv);
+                    for (String uri : asv.getURIs()){
+                        servletMap.put(uri, asv);
+                    }
                 }
             }
         }
