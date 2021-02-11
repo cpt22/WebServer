@@ -1,3 +1,5 @@
 /configuration/*
 /html/*
 /logs/*
+/.idea/*
+/.logs/*
